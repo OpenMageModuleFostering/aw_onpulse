@@ -143,8 +143,6 @@ class AW_Onpulse_Helper_Data extends Mage_Core_Helper_Abstract
         foreach($orders as $order) {
             $processedOrders[] = $this->processOrderToArray($order);
         }
-        //var_dump($processedOrders);
-//die;
 
         $processedDashboardClientsToday = array();
         $processedDashboardClientsYesterday = array();

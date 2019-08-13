@@ -119,16 +119,21 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
             $orderItems = $order->getAllVisibleItems();
             if(count($orderItems)>0) {
                 foreach($orderItems as $orderItem) {
-                    $key = array_key_exists($orderItem->getProduct()->getId(),$items);
+
+                    $key = array_key_exists($orderItem->getProductId(),$items);
                     if($key === false) {
-                        $items[$orderItem->getProduct()->getId()] = array(
-                            'name'=>$orderItem->getProduct()->getName(),
+                        if(count($items) > 15) {
+                            continue;
+                        }
+                        $product = Mage::getModel('catalog/product')->load($orderItem->getProductId());
+                        $items[$product->getId()] = array(
+                            'name'=>$product->getName(),
                             'qty'=>0,
                             'amount' => 0
                         );
                     }
-                    $items[$orderItem->getProduct()->getId()]['qty'] += $orderItem->getQtyOrdered();
-                    $items[$orderItem->getProduct()->getId()]['amount'] += $orderItem->getBaseRowTotal()-$orderItem->getBaseDiscountInvoiced();
+                    $items[$orderItem->getProductId()]['qty'] += $orderItem->getQtyOrdered();
+                    $items[$orderItem->getProductId()]['amount'] += Mage::helper('awonpulse')->getPriceFormat($orderItem->getBaseRowTotal()-$orderItem->getBaseDiscountInvoiced());
                 }
             }
         }
