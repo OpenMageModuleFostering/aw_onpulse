@@ -274,7 +274,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         $shiftedDate->addDay(1);
         $copyDate = clone $date;
         $revenue = array();
-        for ($i = 0; $i < 15; $i++) {
+        for ($i = 0; $i < 32; $i++) {
             /** @var $yesterdayOrders Mage_Sales_Model_Resource_Order_Collection */
             $orders = Mage::getModel('sales/order')->getCollection();
             $orders->addAttributeToFilter('created_at',
@@ -311,7 +311,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
             ->addAttributeToSelect('*')
             ->addAttributeToFilter('status', array('in' => $orderStatus));
         $thisMonthSoFar = array();
-        foreach($orders as $order){
+        foreach($orders as $order) {
             if ($salesStatisticUnit == AW_Onpulse_Model_Source_ProfitRevenue::PROFIT_VALUE) {
                 $baseTotalCost = 0;
                 foreach ($order->getItemsCollection() as $item) {
@@ -333,15 +333,15 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         $weekendDayList = array();
         $workDayLeft = 0;
         $weekendDayLeft = 0;
-        $copyDate->subDay(intval($date->get(Zend_Date::DAY_SHORT)) - 1);
+        $copyDate->subDay(intval($copyDate->get(Zend_Date::DAY_SHORT)) - 1);
         for ($i = 0; $i < $copyDate->get(Zend_Date::MONTH_DAYS); $i++) {
-            $weekdayDigit = intval($date->get(Zend_Date::WEEKDAY_DIGIT));//from Sunday to Saturday -> from 0 to 6;
+            $weekdayDigit = intval($copyDate->get(Zend_Date::WEEKDAY_DIGIT));//from Sunday to Saturday -> from 0 to 6;
             $isWeekday = in_array($weekdayDigit, $weekdayConfig);
-            if (array_key_exists($i, $thisMonthSoFar)) {
+            if ($i < $daysFrom1st) {
                 if ($isWeekday) {
-                    $weekendDayList[] = $thisMonthSoFar[$i];
+                    $weekendDayList[] = $revenue[$i]['revenue'];
                 } else {
-                    $workDayList[] = $thisMonthSoFar[$i];
+                    $workDayList[] = $revenue[$i]['revenue'];
                 }
             } else {
                 $isWeekday?$weekendDayLeft++:$workDayLeft++;
@@ -350,7 +350,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         }
         $workMedian = $this->_getMedianFromArray($workDayList);
         $weekendMedian = $this->_getMedianFromArray($weekendDayList);
-        $thisMonthForecast = array_sum($thisMonthSoFar) + $workMedian * $workDayLeft + $weekendMedian * $workDayLeft;
+        $thisMonthForecast = array_sum($thisMonthSoFar) + $workMedian * $workDayLeft + $weekendMedian * $weekendDayLeft;
 
         $thisMonth = array();
         $thisMonth['thisMonthSoFar'] = Mage::helper('awonpulse')->getPriceFormat(array_sum($thisMonthSoFar));
@@ -419,10 +419,14 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
             $revenue[$i]['date'] = $shiftedDate->toString(Varien_Date::DATE_INTERNAL_FORMAT);
             foreach($orders as $order){
                 $revenue[$i]['revenue'] += $order->getTotalItemCount();
+                $thisMonthAvgList[] = $order->getTotalItemCount();
             }
-            $thisMonthAvgList[] = $revenue[$i]['revenue'];
+            if (count($orders) > 0) {
+                $revenue[$i]['revenue'] = Mage::helper('awonpulse')->getPriceFormat(
+                    $revenue[$i]['revenue']/count($orders)
+                );
+            }
         }
-
         $thisMonthAvg = 0;
         if (count($thisMonthAvgList) > 0) {
             $thisMonthAvg = array_sum($thisMonthAvgList) / count($thisMonthAvgList);
