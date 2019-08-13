@@ -5,6 +5,14 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
     const COUNT_CUSTOMERS = 5;
     const MYSQL_DATE_FORMAT = 'Y-m-d';
 
+    private function _getShiftedDate()
+    {
+        $timeShift = Mage::app()->getLocale()->date()->get(Zend_Date::TIMEZONE_SECS);
+        $now = date(self::MYSQL_DATE_FORMAT, time() + $timeShift);
+        $now = new Zend_Date($now);
+        return $now;
+    }
+
     private function _getCurrentDate()
     {
         $now = Mage::app()->getLocale()->date();
@@ -26,6 +34,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
 
         return $dateObj;
     }
+
     public function pushData($event = null)
     {
         $aggregator = $event->getEvent()->getAggregator();
@@ -42,16 +51,20 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
     private function _getByers($date) {
         /** @var $todayRegistered Mage_Customer_Model_Resource_Customer_Collection */
         $todayRegistered = Mage::getModel('customer/customer')->getCollection();
-        $todayRegistered->addAttributeToFilter('created_at', array('from' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)));
+        $todayRegistered->addAttributeToFilter('created_at', array(
+            'from' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),
+            'to' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
+        ));
         $todayRegistered->addAttributeToSelect('*');
 
         /* @var $collection Mage_Reports_Model_Mysql4_Order_Collection */
-        //$collection = Mage::getResourceModel('reports/order_collection');
         $customerArray = array();
         $todayOrders = Mage::getModel('sales/order')->getCollection();
-        $todayOrders->addAttributeToFilter('created_at', array('from' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)));
+        $todayOrders->addAttributeToFilter('created_at', array(
+            'from' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),
+            'to' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
+        ));
         foreach ($todayOrders as $order) {
-            //$order->getCustomerId();
             if ($order->getCustomerId()){
                 $customerArray[] = $order->getCustomerId();
             }
@@ -75,16 +88,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         $yesterdayCustomers = null;
         $todayCustomers = $this->_getByers($date);
         $yesterdayCustomers = $this->_getByers($date->addDay(-1));
-        //var_dump($yesterdayCustomers);
-        /*$collection
-            ->groupByCustomer()
-            ->addAttributeToFilter('created_at', array('gteq' => $date->toString(Varien_Date::DATE_INTERNAL_FORMAT)))
-            ->addOrdersCount()
-            ->joinCustomerName();
-        $buyers = 0;
-        foreach ($collection as $item) {
-            $buyers++;
-        }*/
+
         return array('online_visistors' => $online, 'today_customers' => $todayCustomers, 'yesterday_customers' => $yesterdayCustomers);
     }
 
@@ -95,7 +99,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
 
         /** @var $yesterdayOrders Mage_Sales_Model_Resource_Order_Collection */
         $yesterdayOrders = Mage::getResourceModel('sales/order_collection');
-       // echo 'request'.$yesterdayOrders->getSelect().'<br>';die;
+
         $yesterdayOrders->addAttributeToFilter('created_at', array(
             'from' => $date->addDay(-1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),
             'to'=>$date->addDay(1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
@@ -144,19 +148,20 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
 
     private function _getSales($date)
     {
-
+        $shiftedDate = $this->_getShiftedDate();
+        $shiftedDate->addDay(1);
         $date->addDay(1);
         $revenue = array();
         for($i=0;$i<15;$i++){
-
             /** @var $yesterdayOrders Mage_Sales_Model_Resource_Order_Collection */
             $orders = Mage::getModel('sales/order')->getCollection();
             $orders->addAttributeToFilter('created_at', array('from' => $date->addDay(-1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),'to'=>$date->addDay(1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)))
                 ->addAttributeToSelect('*')
                 ->addAttributeToFilter('state', array('eq' => Mage_Sales_Model_Order::STATE_COMPLETE));
             $date->addDay(-1);
+            $shiftedDate->addDay(-1);
             $revenue[$i]['revenue']=0;
-            $revenue[$i]['date']=$date->toString(Varien_Date::DATE_INTERNAL_FORMAT);
+            $revenue[$i]['date']=$shiftedDate->toString(Varien_Date::DATE_INTERNAL_FORMAT);
             foreach($orders as $order){
                     $revenue[$i]['revenue']+=$order->getBaseGrandTotal();
 
@@ -164,6 +169,5 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
             }
         }
         return array('revenue'=>$revenue);
-
     }
 }
