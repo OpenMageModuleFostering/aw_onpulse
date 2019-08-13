@@ -162,6 +162,7 @@ class AW_Onpulse_Helper_Data extends Mage_Core_Helper_Abstract
 
         return array(
             'connector_version' => (string)Mage::getConfig()->getNode()->modules->AW_Onpulse->version,
+            'price_format' =>Mage::app()->getLocale()->getJsPriceFormat(),
             'clients' => $processedClients,
             'orders' => $processedOrders,
             'dashboard' => $dashboard,

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
     <name>AW_Onpulse</name>
-    <version>1.0.13</version>
+    <version>1.0.14</version>
     <stability>stable</stability>
     <license uri="http://onpulse.info/TOS.pdf">EULA</license>
     <channel>community</channel>
@@ -9,11 +9,12 @@
     <summary>Mobile administration for Magento</summary>
     <description>OnPulse provides you with an access to your sales statistics, the latest orders, and the clients list through any iOS or Android powered mobile device.&#xD;
 </description>
-    <notes>+ performance improvements</notes>
+    <notes>+ currency formatting&#xD;
+* minor bug fixes</notes>
     <authors><author><name>AW_Core_Team</name><user>aheadworks</user><email>no-reply@aheadworks.com</email></author></authors>
-    <date>2013-07-29</date>
-    <time>09:12:23</time>
-    <contents><target name="magelocal"><dir name="AW"><dir name="Onpulse"><dir name="Block"><dir name="System"><dir name="Config"><dir name="Form"><dir name="Fieldset"><dir name="Onpulse"><file name="Settings.php" hash="6ba04d380ea7140b42c54f00a0acc452"/></dir></dir></dir></dir></dir></dir><dir name="Helper"><file name="Data.php" hash="08b4ef40a59046502997acfde2bf4d03"/><file name="Data.php.orig" hash="fb2ab95d3268d3d8a689143dff7ffdb8"/></dir><dir name="Model"><dir name="Aggregator"><file name="Component.php" hash="721719d0df46da388b229c10d137864b"/><dir name="Components"><file name="Customer.php" hash="52df2d3be2d6196ee957b2e2c0d92cb2"/><file name="Order.php" hash="a9a23d8f678a68f1b245b97126cc3116"/><file name="Statistics.php" hash="e64a74103ab7b6c9cd93267b00dd5f79"/><file name="Statistics.php.orig" hash="919ccaa59b981eb624387937fa4390f1"/></dir></dir><file name="Aggregator.php" hash="fcb4342d583403a99ca7bc245115854f"/><file name="Credentials.php" hash="526d3b476480552ae03f38696bd6fc93"/></dir><dir name="etc"><file name="config.xml" hash="5f74ee63e9bb1ea38089125622df0d0a"/><file name="system.xml" hash="11fa0896cc56063c5c572d992622e224"/></dir></dir></dir></target><target name="mage"><dir name="app"><dir name="design"><dir name="adminhtml"><dir name="default"><dir name="default"><dir name="template"><dir name="aw_onpulse"><file name="settings.phtml" hash="10c6eea6457de53e501360b25eb50f1d"/></dir></dir></dir></dir></dir></dir><dir name="etc"><dir name="modules"><file name="AW_Onpulse.xml" hash="de39a5ffebb31ee697fbaf56bb1bfb8a"/></dir></dir><dir name="locale"><dir name="en_US"><file name="AW_Onpulse.csv" hash="23f7bee483404129d0f811a2f53cf38d"/></dir></dir></dir><dir><dir name="app"><dir name="design"><dir name="adminhtml"><dir name="default"><dir name="default"><dir name="layout"><file name="aw_onpulse.xml" hash="5036d3b89b9a204c9420f40f3983d987"/></dir></dir></dir></dir></dir></dir></dir></target></contents>
+    <date>2013-09-03</date>
+    <time>06:22:41</time>
+    <contents><target name="magelocal"><dir name="AW"><dir name="Onpulse"><dir name="Block"><dir name="System"><dir name="Config"><dir name="Form"><dir name="Fieldset"><dir name="Onpulse"><file name="Settings.php" hash="6ba04d380ea7140b42c54f00a0acc452"/></dir></dir></dir></dir></dir></dir><dir name="Helper"><file name="Data.php" hash="88a0b32ce2c65c1850d072f41bb521e6"/><file name="Data.php.orig" hash="fb2ab95d3268d3d8a689143dff7ffdb8"/></dir><dir name="Model"><dir name="Aggregator"><file name="Component.php" hash="721719d0df46da388b229c10d137864b"/><dir name="Components"><file name="Customer.php" hash="52df2d3be2d6196ee957b2e2c0d92cb2"/><file name="Order.php" hash="a9a23d8f678a68f1b245b97126cc3116"/><file name="Statistics.php" hash="c2ee05f14c1d6b4ff27b910ecb3c0649"/><file name="Statistics.php.orig" hash="919ccaa59b981eb624387937fa4390f1"/></dir></dir><file name="Aggregator.php" hash="fcb4342d583403a99ca7bc245115854f"/><file name="Credentials.php" hash="526d3b476480552ae03f38696bd6fc93"/></dir><dir name="controllers"><file name="IndexController.php" hash="b37753e87cfb6a18045cf9af7a255a84"/></dir><dir name="etc"><file name="config.xml" hash="9e5b3dd18372f8d7a573d86614536956"/><file name="system.xml" hash="11fa0896cc56063c5c572d992622e224"/></dir></dir></dir></target><target name="mage"><dir name="app"><dir name="design"><dir name="adminhtml"><dir name="default"><dir name="default"><dir name="template"><dir name="aw_onpulse"><file name="settings.phtml" hash="10c6eea6457de53e501360b25eb50f1d"/></dir></dir></dir></dir></dir></dir><dir name="etc"><dir name="modules"><file name="AW_Onpulse.xml" hash="de39a5ffebb31ee697fbaf56bb1bfb8a"/></dir></dir><dir name="locale"><dir name="en_US"><file name="AW_Onpulse.csv" hash="23f7bee483404129d0f811a2f53cf38d"/></dir></dir></dir><dir><dir name="app"><dir name="design"><dir name="adminhtml"><dir name="default"><dir name="default"><dir name="layout"><file name="aw_onpulse.xml" hash="5036d3b89b9a204c9420f40f3983d987"/></dir></dir></dir></dir></dir></dir></dir></target></contents>
     <compatible/>
     <dependencies><required><php><min>5.2.0</min><max>6.0.0</max></php></required></dependencies>
 </package>

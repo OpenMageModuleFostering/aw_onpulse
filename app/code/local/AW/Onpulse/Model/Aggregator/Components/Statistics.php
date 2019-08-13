@@ -116,7 +116,8 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         unset($orders);
 
         $orders = Mage::getModel('sales/order_item')->getCollection()
-            ->addFieldToFilter('order_id',array('in'=>$orderIds));
+            ->addFieldToFilter('order_id',array('in'=>$orderIds))
+            ->addFieldToFilter('parent_item_id', array('null'=> true));
         $orders =  Mage::getSingleton('core/resource')->getConnection('sales_read')->query($orders->getSelect()->resetJoinLeft())->fetchAll();
 
         $items = array();
@@ -240,7 +241,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         }
         $daysFrom1st=$copyDate->get(Zend_Date::DAY);
         $orders = Mage::getModel('sales/order')->getCollection();
-        $orders->addAttributeToFilter('created_at', array('from' => $copyDate->addDay(-$daysFrom1st)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),'to'=>$copyDate->addDay($daysFrom1st-1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)))
+        $orders->addAttributeToFilter('created_at', array('from' => $copyDate->addDay(-($daysFrom1st-1))->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),'to'=>$copyDate->addDay($daysFrom1st)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)))
             ->addAttributeToSelect('*')
             ->addAttributeToFilter('status', array('in' => $ordersstatus));
         $thisMonthSoFar = 0;
@@ -251,7 +252,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         }
         $thisMonthForecast = 0;
         $numberDaysInMonth = $copyDate->get(Zend_Date::MONTH_DAYS);
-        $thisMonthAvg = $thisMonthSoFar /($daysFrom1st - 1);
+        $thisMonthAvg = $thisMonthSoFar /($daysFrom1st-1);
         $thisMonthForecast = $thisMonthAvg * $numberDaysInMonth;
         $thisMonth = array();
         $thisMonth['thisMonthSoFar'] = Mage::helper('awonpulse')->getPriceFormat($thisMonthSoFar);
