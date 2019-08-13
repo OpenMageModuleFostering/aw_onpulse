@@ -53,16 +53,17 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         $todayRegistered = Mage::getModel('customer/customer')->getCollection();
         $todayRegistered->addAttributeToFilter('created_at', array(
             'from' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),
-            'to' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
+            'to' => $date->addDay(1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
         ));
         $todayRegistered->addAttributeToSelect('*');
 
+        $date->addDay(-1);
         /* @var $collection Mage_Reports_Model_Mysql4_Order_Collection */
         $customerArray = array();
         $todayOrders = Mage::getModel('sales/order')->getCollection();
         $todayOrders->addAttributeToFilter('created_at', array(
             'from' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),
-            'to' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
+            'to' => $date->addDay(1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
         ));
         foreach ($todayOrders as $order) {
             if ($order->getCustomerId()){
@@ -87,7 +88,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         $todayCustomers = null;
         $yesterdayCustomers = null;
         $todayCustomers = $this->_getByers($date);
-        $yesterdayCustomers = $this->_getByers($date->addDay(-1));
+        $yesterdayCustomers = $this->_getByers($date->addDay(-2));
 
         return array('online_visistors' => $online, 'today_customers' => $todayCustomers, 'yesterday_customers' => $yesterdayCustomers);
     }
