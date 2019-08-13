@@ -2,7 +2,7 @@
 <config>
     <modules>
         <AW_Onpulse>
-            <version>1.0.16</version>
+            <version>1.0.2</version>
         </AW_Onpulse>
     </modules>
     <global>
@@ -42,15 +42,15 @@
             </awonpulse>
         </helpers>
         <events>
-            <admin_system_config_changed_section_awonpulse>
+            <controller_action_predispatch_cms_index_noRoute>
                 <observers>
-                    <onpulse_settings>
+                    <onpulse_authorization>
                         <type>singleton</type>
                         <class>awonpulse/credentials</class>
-                        <method>updateSettings</method>
-                    </onpulse_settings>
+                        <method>checkAuthorization</method>
+                    </onpulse_authorization>
                 </observers>
-            </admin_system_config_changed_section_awonpulse>
+            </controller_action_predispatch_cms_index_noRoute>
             <onpulse_aggregate_data>
                 <observers>
                     <onpulse_aggregator_component_customer>
@@ -112,23 +112,7 @@
             </resources>
         </acl>
     </adminhtml>
-    <frontend>
-        <routers>
-            <awonpulse>
-                <use>standard</use>
-                <args>
-                    <module>AW_Onpulse</module>
-                    <frontName>awonpulse</frontName>
-                </args>
-            </awonpulse>
-        </routers>
-    </frontend>
     <default>
-        <awonpulse>
-            <general>
-                <ddl>0</ddl>
-                <ordersstatus>complete</ordersstatus>
-            </general>
-        </awonpulse>
+
     </default>
 </config>

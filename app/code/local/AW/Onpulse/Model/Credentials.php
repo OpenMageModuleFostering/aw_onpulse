@@ -5,87 +5,69 @@ class AW_Onpulse_Model_Credentials extends Mage_Core_Model_Abstract
     private $key = null;
     private $hash = null;
     private $qrhash = null;
-    private $ddl = null;
 
-
-    private function _updateURLRedirectEE($idPath,$oldRequestPath, $requestPath)
+    private function _readConfig()
     {
-        $keyRewrite = Mage::getModel('enterprise_urlrewrite/redirect')->loadByRequestPath($oldRequestPath, 0);
-        $keyRewrite
-            ->setOptions()
-            ->setIdPath($idPath)
-            ->setTargetPath('awonpulse')
-            ->setIdentifier($requestPath)
-            ->save();
+        if(!$this->qrhash) {
+            //Read configuration
+            if ((Mage::getStoreConfig('awonpulse/general/credurlkey'))&&(Mage::getStoreConfig('awonpulse/general/credhash'))) {
+                $this->hash = Mage::getStoreConfig('awonpulse/general/credhash');
+                $this->key  = Mage::getStoreConfig('awonpulse/general/credurlkey');
+                $this->qrhash = md5($this->key.$this->hash);
+                return true;
+            }
+        } else {
+            return true;
+        }
     }
 
-    private function _updateURLRewrite($idPath,$requestPath)
+    public function checkAuthorization()
     {
-        if(!$requestPath) {
-            return;
-        }
-        $keyRewrite = Mage::getModel('core/url_rewrite')->loadByIdPath($idPath);
-        $oldRequestPath  = $keyRewrite->getRequestPath();
-        $defaultStore =  Mage::app()->getStore()->getId();
-        if(Mage::app()->getDefaultStoreView() !== null) {
-            $defaultStore = Mage::app()->getDefaultStoreView()->getId();
-        }
-        if(AW_Onpulse_Helper_Data::getPlatform() == AW_Onpulse_Helper_Data::EE_PLATFORM) {
-            $this->_updateURLRedirectEE($idPath,$oldRequestPath, $requestPath);
-        }
-        $keyRewrite
-            ->setIsSystem(0)
-            ->setStoreId($defaultStore)
-            ->setOptions('')
-            ->setIdPath($idPath)
-            ->setTargetPath('awonpulse')
-            ->setRequestPath($requestPath)
-            ->save();
-    }
-
-    public function readConfig()
-    {
-
-        $defaultStore =  Mage::app()->getStore()->getId();
-        if(Mage::app()->getDefaultStoreView() !== null) {
-            $defaultStore = Mage::app()->getDefaultStoreView()->getId();
-        }
-
-
-        if ((!Mage::getStoreConfig('awonpulse/general/credurlkey', $defaultStore))
-            && (!Mage::getStoreConfig('awonpulse/general/credhash', $defaultStore))
-        ) {
-            Mage::app()->setUpdateMode(false);
-            Mage::app()->init('','store');
-        }
-
-        //Read configuration
-        if ((Mage::getStoreConfig('awonpulse/general/credurlkey', $defaultStore))
-            && (Mage::getStoreConfig('awonpulse/general/credhash', $defaultStore))
-        ) {
-            $this->hash = Mage::getStoreConfig(
-                'awonpulse/general/credhash', $defaultStore
+        if (Mage::getStoreConfig('advanced/modules_disable_output/AW_Onpulse')) {
+            $result = array(
+                'result'=>false,
+                'error'=>4,
+                'message'=>'Connector disabled'
             );
-            $this->ddl = Mage::getStoreConfig('awonpulse/general/ddl', $defaultStore);
-            $this->key = Mage::getStoreConfig(
-                'awonpulse/general/credurlkey', $defaultStore
+            die('['.serialize($result).']');
+        }
+        $qrcode = null;
+        $data = Mage::app()->getFrontController();
+        $qrcode = mb_substr($data->getRequest()->getOriginalPathInfo(),-32);
+        if(!preg_match('/[a-z0-9]{32}/',$qrcode)) return;
+        //Check request
+        //if QRcode authorization
+        if($qrcode) {
+            if($this->_readConfig()){
+                if($qrcode != $this->qrhash) {
+                    $result = array(
+                        'result'=>false,
+                        'error'=>1,
+                        'message'=>'Incorrect credentials'
+                    );
+                    die('['.serialize($result).']');
+                }
+            } else {
+                $result = array(
+                    'result'=>false,
+                    'error'=>1,
+                    'message'=>'Incorrect module configuration'
+                );
+                die('['.serialize($result).']');
+            }
+        } else {
+            $result = array(
+                'result'=>false,
+                'error'=>1,
+                'message'=>'Incorrect authorization data'
             );
-            $this->qrhash = md5($this->key . $this->hash);
+            die('['.serialize($result).']');
         }
 
-        return array(
-            'hash' => $this->hash,
-            'key' => $this->key,
-            'qrhash' => $this->qrhash,
-            'ddl' => $this->ddl
-        );
-
+        $aggregator = Mage::getSingleton('awonpulse/aggregator')->Aggregate();
+        $output = Mage::helper('awonpulse')->processOutput($aggregator);
+        echo serialize($output);
+        die;
     }
 
-    public function updateSettings($observer)
-    {
-        $this->readConfig();
-        $this->_updateURLRewrite('onpulse/qrhash',$this->qrhash);
-        $this->_updateURLRewrite('onpulse/key',$this->key);
-    }
 }
