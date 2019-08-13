@@ -2,9 +2,18 @@
 
 class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model_Aggregator_Component
 {
+    /**
+     * How much last registered customers is to display
+     */
     const COUNT_CUSTOMERS = 5;
+
     const MYSQL_DATE_FORMAT = 'Y-d-m';
 
+    const BESTSELLERS_DAYS_PERIOD = 15;
+
+    /**
+     * @return Zend_Date
+     */
     private function _getShiftedDate()
     {
         $timeShift = Mage::app()->getLocale()->date()->get(Zend_Date::TIMEZONE_SECS);
@@ -13,6 +22,9 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         return $now;
     }
 
+    /**
+     * @return Zend_Date
+     */
     private function _getCurrentDate()
     {
         $now = Mage::app()->getLocale()->date();
@@ -21,35 +33,50 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         //set default timezone for store (admin)
         $dateObj->setTimezone(Mage::app()->getStore()->getConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_TIMEZONE));
 
+        //set begining of day
+        $dateObj->setHour(00);
+        $dateObj->setMinute(00);
+        $dateObj->setSecond(00);
+
         //set date with applying timezone of store
         $dateObj->set($now, Zend_Date::DATE_SHORT, Mage::app()->getLocale()->getDefaultLocale());
 
         //convert store date to default date in UTC timezone without DST
         $dateObj->setTimezone(Mage_Core_Model_Locale::DEFAULT_TIMEZONE);
-        //set begining of day
-        $dateObj->setHour(00);
-        $dateObj->setMinute(00);
-        $dateObj->setSecond(00);
+
         return $dateObj;
     }
 
-    public function pushData($event = null)
+    /**
+     * @param $event
+     */
+    public function pushData($event)
     {
         $aggregator = $event->getEvent()->getAggregator();
         $dashboard = array();
         $today = $this->_getCurrentDate();
 
-        $dashboard['sales']     = $this->_getSales($today);
-        $today = $this->_getCurrentDate();
-        $dashboard['orders']    = $this->_getOrders($today);
-        $today = $this->_getCurrentDate();
-        $dashboard['customers'] = $this->_getCustomers($today);
-        $dashboard['bestsellers'] = $this->_getBestsellers($today);
-        $aggregator->setData('dashboard',$dashboard);
+        //Load sales revenue
+        $dashboard['sales']     = $this->_getSales(clone $today);
 
+        //Load last orders
+        $dashboard['orders']    = $this->_getOrders(clone $today);
+
+        //Load last customer registrations
+        $dashboard['customers'] = $this->_getCustomers(clone $today);
+
+        //Load best selling products
+        $dashboard['bestsellers'] = $this->_getBestsellers(clone $today);
+
+        $aggregator->setData('dashboard',$dashboard);
     }
 
-    private function _getByers($date) {
+    /**
+     * @param Zend_Date $date
+     *
+     * @return array
+     */
+    private function _getByers(Zend_Date $date) {
         /** @var $todayRegistered Mage_Customer_Model_Resource_Customer_Collection */
         $todayRegistered = Mage::getModel('customer/customer')->getCollection();
         $todayRegistered->addAttributeToFilter('created_at', array(
@@ -79,35 +106,39 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         );
     }
 
-    private function _getCustomers($date)
+    /**
+     * @param Zend_Date $date
+     *
+     * @return array
+     */
+    private function _getCustomers(Zend_Date $date)
     {
-
         //collect online visitors
         $online = Mage::getModel('log/visitor_online')
             ->prepare()
-            ->getCollection()->getSize();
-        $todayCustomers = null;
-        $yesterdayCustomers = null;
+            ->getCollection()->addFieldToFilter('remote_addr',array('neq'=>Mage::helper('core/http')->getRemoteAddr(true)))->getSize();
         $todayCustomers = $this->_getByers($date);
         $yesterdayCustomers = $this->_getByers($date->addDay(-2));
 
         return array('online_visistors' => $online, 'today_customers' => $todayCustomers, 'yesterday_customers' => $yesterdayCustomers);
     }
 
-    private function _getBestsellers($date)
+    /**
+     * @param Zend_Date $date
+     *
+     * @return array
+     */
+    private function _getBestsellers(Zend_Date $date)
     {
-        /** @var  $date Zend_Date */
-        $orderstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus',Mage::app()->getDefaultStoreView()->getId());
-        $orderstatus = explode(',', $orderstatus);
+        $orderstatus = explode(',', Mage::getStoreConfig('awonpulse/general/ordersstatus',Mage::app()->getDefaultStoreView()->getId()));
         if (count($orderstatus)==0){
             $orderstatus = array(Mage_Sales_Model_Order::STATE_COMPLETE);
         }
-        //Collect all orders for last 30 days
+        //Collect all orders for last N days
         /** @var  $orders Mage_Sales_Model_Resource_Order_Collection */
         $orders = Mage::getResourceModel('sales/order_collection');
         $orders->addAttributeToFilter('created_at', array(
-            'from' => $date->addDay(-15)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),
-            'to'=>$date->addDay(16)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
+            'from' => $date->addDay(-self::BESTSELLERS_DAYS_PERIOD)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
         ))->addAttributeToFilter('status', array('in' => $orderstatus));
 
         $orderIds =  Mage::getSingleton('core/resource')->getConnection('sales_read')->query($orders->getSelect()->resetJoinLeft())->fetchAll(PDO::FETCH_COLUMN,0);
@@ -122,13 +153,8 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
 
         /** @var $order Mage_Sales_Model_Order */
         foreach($orders as $orderItem) {
-
                     $key = array_key_exists($orderItem['product_id'],$items);
                     if($key === false) {
-                       /* if(count($items) > 15) {
-                            continue;
-                        }*/
-                        //$product = Mage::getModel('catalog/product')->load($orderItem->getProductId());
                         $items[$orderItem['product_id']] = array(
                             'name'=>Mage::helper('awonpulse')->escapeHtml($orderItem['name']),
                             'qty'=>0,
@@ -141,7 +167,6 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
 
         if(count($items) > 0) {
             foreach ($items as $id => $row) {
-
                 $name[$id]  = $row['name'];
                 $qty[$id] = $row['qty'];
             }
@@ -151,7 +176,12 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
     }
 
 
-    private function _getOrders($date)
+    /**
+     * @param Zend_Date $date
+     *
+     * @return array
+     */
+    private function _getOrders(Zend_Date $date)
     {
 
         //collect yesterday orders count
@@ -209,17 +239,23 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         return array('yesterday_orders' => $yesterdayOrders->getSize(), 'today_orders' => $todayOrders->getSize(), 'orders_totals' => $order);
     }
 
-    private function _getSales($date)
+    /**
+     * @param Zend_Date $date
+     *
+     * @return array
+     */
+    private function _getSales(Zend_Date $date)
     {
+
         $ordersstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus',Mage::app()->getDefaultStoreView()->getId());
         $ordersstatus = explode(',', $ordersstatus);
         if (count($ordersstatus)==0){
             $ordersstatus = array(Mage_Sales_Model_Order::STATE_COMPLETE);
         }
         $shiftedDate = $this->_getShiftedDate();
-        $shiftedDate->addDay(1);
         $date->addDay(1);
         $copyDate = clone $date;
+        $numberDaysInMonth = $copyDate->get(Zend_Date::MONTH_DAYS);
         $revenue = array();
         for($i=0;$i<15;$i++){
             /** @var $yesterdayOrders Mage_Sales_Model_Resource_Order_Collection */
@@ -241,7 +277,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         $daysFrom1st=$copyDate->get(Zend_Date::DAY);
 
         $orders = Mage::getModel('sales/order')->getCollection();
-        $orders->addAttributeToFilter('created_at', array('from' => $copyDate->addDay(-($daysFrom1st-1))->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)))
+        $orders->addAttributeToFilter('created_at', array('from' => $copyDate->addDay(-($daysFrom1st))->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)))
             ->addAttributeToSelect('*')
             ->addAttributeToFilter('status', array('in' => $ordersstatus));
         $thisMonthSoFar = 0;
@@ -251,8 +287,8 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
             }
         }
 
-        $numberDaysInMonth = $copyDate->get(Zend_Date::MONTH_DAYS);
-        $thisMonthAvg = $thisMonthSoFar /($daysFrom1st-1);
+        $thisMonthAvg = $thisMonthSoFar /($daysFrom1st);
+
         $thisMonthForecast = $thisMonthAvg * $numberDaysInMonth;
         $thisMonth = array();
         $thisMonth['thisMonthSoFar'] = Mage::helper('awonpulse')->getPriceFormat($thisMonthSoFar);
