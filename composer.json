@@ -1,0 +1,16 @@
+{
+    "name": "OpenMageModuleFostering/AW_Onpulse",
+    "type": "magento-module",
+    "license": "EULA",
+    "homepage": "",
+    "description": "Mobile administration for Magento",
+    "authors": [
+    {
+        "name": "AW_Core_Team",
+        "email": "no-reply@aheadworks.com"
+    }
+],
+    "suggest": {
+        "magento-hackathon/magento-composer-installer": "*"
+    }
+}
