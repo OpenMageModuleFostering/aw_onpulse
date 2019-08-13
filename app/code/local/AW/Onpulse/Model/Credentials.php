@@ -65,14 +65,6 @@ class AW_Onpulse_Model_Credentials extends Mage_Core_Model_Abstract
 
     public function checkAuthorization()
     {
-        if (Mage::getStoreConfig('advanced/modules_disable_output/AW_Onpulse')) {
-            $result = array(
-                'result'=>false,
-                'error'=>4,
-                'message'=>'Connector disabled'
-            );
-            die('['.serialize($result).']');
-        }
         $authFlag = false;
         //Check direct link
         $authFlag = $this->_checkDirectLink();
@@ -88,6 +80,14 @@ class AW_Onpulse_Model_Credentials extends Mage_Core_Model_Abstract
             );
            // echo '['.serialize($result).']';
         } else {
+            if (Mage::getStoreConfig('advanced/modules_disable_output/AW_Onpulse')) {
+                $result = array(
+                    'result'=>false,
+                    'error'=>4,
+                    'message'=>'Connector disabled'
+                );
+                die('['.serialize($result).']');
+            }
             $aggregator = Mage::getSingleton('awonpulse/aggregator')->Aggregate();
             $output = Mage::helper('awonpulse')->processOutput($aggregator);
             echo serialize($output);

@@ -108,38 +108,35 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         /** @var  $orders Mage_Sales_Model_Resource_Order_Collection */
         $orders = Mage::getResourceModel('sales/order_collection');
         $orders->addAttributeToFilter('created_at', array(
-            'from' => $date->addDay(-15)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),
-            'to'=>$date->addDay(16)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
-        ))->addAttributeToFilter('status', array('in' => $orderstatus));
-
-        $orderIds =  Mage::getSingleton('core/resource')->getConnection('sales_read')->query($orders->getSelect()->resetJoinLeft())->fetchAll(PDO::FETCH_COLUMN,0);
-        unset($orders);
-
-        $orders = Mage::getModel('sales/order_item')->getCollection()
-            ->addFieldToFilter('order_id',array('in'=>$orderIds));
-        $orders =  Mage::getSingleton('core/resource')->getConnection('sales_read')->query($orders->getSelect()->resetJoinLeft())->fetchAll();
-
+            'from' => $date->addDay(-30)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),
+            'to'=>$date->addDay(31)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
+        ))->addAttributeToSelect('*')
+            ->addAttributeToFilter('status', array('in' => $orderstatus));
         $items = array();
 
         /** @var $order Mage_Sales_Model_Order */
-        foreach($orders as $orderItem) {
+        foreach($orders as $order) {
+            $orderItems = $order->getAllVisibleItems();
+            if(count($orderItems)>0) {
+                foreach($orderItems as $orderItem) {
 
-                    $key = array_key_exists($orderItem['product_id'],$items);
+                    $key = array_key_exists($orderItem->getProductId(),$items);
                     if($key === false) {
-                       /* if(count($items) > 15) {
+                        if(count($items) > 15) {
                             continue;
-                        }*/
-                        //$product = Mage::getModel('catalog/product')->load($orderItem->getProductId());
-                        $items[$orderItem['product_id']] = array(
-                            'name'=>$orderItem['name'],
+                        }
+                        $product = Mage::getModel('catalog/product')->load($orderItem->getProductId());
+                        $items[$product->getId()] = array(
+                            'name'=>$product->getName(),
                             'qty'=>0,
                             'amount' => 0
                         );
                     }
-                    $items[$orderItem['product_id']]['qty'] += $orderItem['qty_ordered'];
-                    $items[$orderItem['product_id']]['amount'] += Mage::helper('awonpulse')->getPriceFormat($orderItem['base_row_total']-$orderItem['base_discount_invoiced']);
+                    $items[$orderItem->getProductId()]['qty'] += $orderItem->getQtyOrdered();
+                    $items[$orderItem->getProductId()]['amount'] += Mage::helper('awonpulse')->getPriceFormat($orderItem->getBaseRowTotal()-$orderItem->getBaseDiscountInvoiced());
                 }
-
+            }
+        }
         if(count($items) > 0) {
             foreach ($items as $id => $row) {
 
