@@ -1,14 +1,14 @@
 <?php
 $directLoginLink = null;
-$ddl = Mage::getStoreConfig('awonpulse/general/ddl');
+$ddl = Mage::getStoreConfig('awonpulse/general/ddl',Mage::app()->getDefaultStoreView()->getId());
 $ordersStatusCollection = Mage::getSingleton('sales/order_config')->getStatuses();
-$ordersstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus');
+$ordersstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus',Mage::app()->getDefaultStoreView()->getId());
 $ordersstatus = explode(',', $ordersstatus);
 $size = count($ordersStatusCollection);
 
-if ((Mage::getStoreConfig('awonpulse/general/credurlkey')) && (Mage::getStoreConfig('awonpulse/general/credhash'))) {
-    $credurlkey = Mage::getStoreConfig('awonpulse/general/credurlkey');
-    $credhash = Mage::getStoreConfig('awonpulse/general/credhash');
+if ((Mage::getStoreConfig('awonpulse/general/credurlkey',Mage::app()->getDefaultStoreView()->getId())) && (Mage::getStoreConfig('awonpulse/general/credhash',Mage::app()->getDefaultStoreView()->getId()))) {
+    $credurlkey = Mage::getStoreConfig('awonpulse/general/credurlkey',Mage::app()->getDefaultStoreView()->getId());
+    $credhash = Mage::getStoreConfig('awonpulse/general/credhash',Mage::app()->getDefaultStoreView()->getId());
     $qrsrc = 'http://chart.apis.google.com/chart?chs=250x250&cht=qr&chld=1/1&choe=utf-8&chl=';
     $backUrl = Mage::app()->getDefaultStoreView()->getBaseUrl() . md5($credurlkey . $credhash);
     $qrsrc .= 'http://m.onpulse.info/?qrhash=' . base64_encode($backUrl);

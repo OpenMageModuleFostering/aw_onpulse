@@ -7,6 +7,49 @@ class AW_Onpulse_Helper_Data extends Mage_Core_Helper_Abstract
 
     public $dateTimeFormat = null;
 
+    const EE_PLATFORM = 100;
+    const PE_PLATFORM = 10;
+    const CE_PLATFORM = 0;
+
+    const ENTERPRISE_DETECT_COMPANY = 'Enterprise';
+    const ENTERPRISE_DETECT_EXTENSION = 'Enterprise';
+    const ENTERPRISE_DESIGN_NAME = "enterprise";
+    const PROFESSIONAL_DESIGN_NAME = "pro";
+
+    protected static $_platform = -1;
+
+    /**
+     * Checks which edition is used
+     * @return int
+     */
+    public static function getPlatform()
+    {
+        if (self::$_platform == -1) {
+            $pathToClaim = BP . DS . "app" . DS . "etc" . DS . "modules" . DS . self::ENTERPRISE_DETECT_COMPANY . "_" . self::ENTERPRISE_DETECT_EXTENSION .  ".xml";
+            $pathToEEConfig = BP . DS . "app" . DS . "code" . DS . "core" . DS . self::ENTERPRISE_DETECT_COMPANY . DS . self::ENTERPRISE_DETECT_EXTENSION . DS . "etc" . DS . "config.xml";
+            $isCommunity = !file_exists($pathToClaim) || !file_exists($pathToEEConfig);
+            if ($isCommunity) {
+                self::$_platform = self::CE_PLATFORM;
+            } else {
+                $_xml = @simplexml_load_file($pathToEEConfig,'SimpleXMLElement', LIBXML_NOCDATA);
+                if(!$_xml===FALSE) {
+                    $package = (string)$_xml->default->design->package->name;
+                    $theme = (string)$_xml->install->design->theme->default;
+                    $skin = (string)$_xml->stores->admin->design->theme->skin;
+                    $isProffessional = ($package == self::PROFESSIONAL_DESIGN_NAME) && ($theme == self::PROFESSIONAL_DESIGN_NAME) && ($skin == self::PROFESSIONAL_DESIGN_NAME);
+                    if ($isProffessional) {
+                        self::$_platform = self::PE_PLATFORM;
+                        return self::$_platform;
+                    }
+                }
+                self::$_platform = self::EE_PLATFORM;
+            }
+        }
+        return self::$_platform;
+    }
+
+
+
     public function getPriceFormat($price)
     {
         $price = sprintf("%01.2f", $price);
@@ -51,14 +94,14 @@ class AW_Onpulse_Helper_Data extends Mage_Core_Helper_Abstract
                 $country = $this->_countries[$customer->getData("{$addresType}_country_id")];
             }
             return array(
-                'first_name' => $customer->getData("{$addresType}_firstname"),
-                'last_name' => $customer->getData("{$addresType}_lastname"),
-                'postcode' => $customer->getData("{$addresType}_postcode"),
-                'city' => $customer->getData("{$addresType}_city"),
-                'street' => $customer->getData("{$addresType}_street"),
-                'telephone' => $this->escapeHtml($customer->getData("{$addresType}_telephone")),
-                'region' => $customer->getData("{$addresType}_region"),
-                'country' => $country,
+                'first_name' => $this->escapeHtml($customer->getData("{$addresType}_firstname")),
+                'last_name' => $this->escapeHtml($customer->getData("{$addresType}_lastname")),
+                'postcode' => $this->escapeHtml($customer->getData("{$addresType}_postcode")),
+                'city' => $this->escapeHtml($customer->getData("{$addresType}_city")),
+                'street' => $this->escapeHtml($customer->getData("{$addresType}_street")),
+                'telephone' => $this->escapeHtml($this->escapeHtml($customer->getData("{$addresType}_telephone"))),
+                'region' => $this->escapeHtml($customer->getData("{$addresType}_region")),
+                'country' => $this->escapeHtml($country),
             );
         }
         return array();
@@ -72,14 +115,14 @@ class AW_Onpulse_Helper_Data extends Mage_Core_Helper_Abstract
             $country = $this->_countries[$order->getData("country_id")];
         }
         return array(
-            'first_name' => $order->getData("firstname"),
-            'last_name' => $order->getData("lastname"),
-            'postcode' => $order->getData("postcode"),
-            'city' => $order->getData("city"),
-            'street' => $order->getData("street"),
+            'first_name' => $this->escapeHtml($order->getData("firstname")),
+            'last_name' => $this->escapeHtml($order->getData("lastname")),
+            'postcode' => $this->escapeHtml($order->getData("postcode")),
+            'city' => $this->escapeHtml($order->getData("city")),
+            'street' => $this->escapeHtml($order->getData("street")),
             'telephone' => $this->escapeHtml($order->getData("telephone")),
-            'region' => $order->getData("region"),
-            'country' => $country,
+            'region' => $this->escapeHtml($order->getData("region")),
+            'country' => $this->escapeHtml($country),
         );
     }
 

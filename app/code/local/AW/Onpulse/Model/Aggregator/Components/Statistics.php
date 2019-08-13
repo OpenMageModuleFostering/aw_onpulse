@@ -21,17 +21,15 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         //set default timezone for store (admin)
         $dateObj->setTimezone(Mage::app()->getStore()->getConfig(Mage_Core_Model_Locale::XML_PATH_DEFAULT_TIMEZONE));
 
-        //set begining of day
-        $dateObj->setHour(00);
-        $dateObj->setMinute(00);
-        $dateObj->setSecond(00);
-
         //set date with applying timezone of store
         $dateObj->set($now, Zend_Date::DATE_SHORT, Mage::app()->getLocale()->getDefaultLocale());
 
         //convert store date to default date in UTC timezone without DST
         $dateObj->setTimezone(Mage_Core_Model_Locale::DEFAULT_TIMEZONE);
-
+        //set begining of day
+        $dateObj->setHour(00);
+        $dateObj->setMinute(00);
+        $dateObj->setSecond(00);
         return $dateObj;
     }
 
@@ -99,7 +97,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
     private function _getBestsellers($date)
     {
         /** @var  $date Zend_Date */
-        $orderstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus');
+        $orderstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus',Mage::app()->getDefaultStoreView()->getId());
         $orderstatus = explode(',', $orderstatus);
         if (count($orderstatus)==0){
             $orderstatus = array(Mage_Sales_Model_Order::STATE_COMPLETE);
@@ -132,7 +130,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
                         }*/
                         //$product = Mage::getModel('catalog/product')->load($orderItem->getProductId());
                         $items[$orderItem['product_id']] = array(
-                            'name'=>$orderItem['name'],
+                            'name'=>Mage::helper('awonpulse')->escapeHtml($orderItem['name']),
                             'qty'=>0,
                             'amount' => 0
                         );
@@ -157,7 +155,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
     {
 
         //collect yesterday orders count
-        $ordersstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus');
+        $ordersstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus',Mage::app()->getDefaultStoreView()->getId());
         $ordersstatus = explode(',', $ordersstatus);
         if (count($ordersstatus)==0){
            $ordersstatus = array(Mage_Sales_Model_Order::STATE_COMPLETE);
@@ -213,7 +211,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
 
     private function _getSales($date)
     {
-        $ordersstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus');
+        $ordersstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus',Mage::app()->getDefaultStoreView()->getId());
         $ordersstatus = explode(',', $ordersstatus);
         if (count($ordersstatus)==0){
             $ordersstatus = array(Mage_Sales_Model_Order::STATE_COMPLETE);
@@ -239,9 +237,11 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
                 }
             }
         }
+        /** @var  $copyDate Zend_Date */
         $daysFrom1st=$copyDate->get(Zend_Date::DAY);
+
         $orders = Mage::getModel('sales/order')->getCollection();
-        $orders->addAttributeToFilter('created_at', array('from' => $copyDate->addDay(-($daysFrom1st-1))->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),'to'=>$copyDate->addDay($daysFrom1st)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)))
+        $orders->addAttributeToFilter('created_at', array('from' => $copyDate->addDay(-($daysFrom1st-1))->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)))
             ->addAttributeToSelect('*')
             ->addAttributeToFilter('status', array('in' => $ordersstatus));
         $thisMonthSoFar = 0;
@@ -250,7 +250,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
                 $thisMonthSoFar+=$order->getBaseGrandTotal();
             }
         }
-        $thisMonthForecast = 0;
+
         $numberDaysInMonth = $copyDate->get(Zend_Date::MONTH_DAYS);
         $thisMonthAvg = $thisMonthSoFar /($daysFrom1st-1);
         $thisMonthForecast = $thisMonthAvg * $numberDaysInMonth;
