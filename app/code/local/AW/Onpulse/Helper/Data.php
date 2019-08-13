@@ -7,14 +7,22 @@ class AW_Onpulse_Helper_Data extends Mage_Core_Helper_Abstract
 
     public $dateTimeFormat = null;
 
-    public function getPriceFormat($data)
+    public function getPriceFormat($price)
     {
-        $data = number_format($data, self::PRECISION, '.', '');
-        return $data;
+        $price = sprintf("%01.2f", $price);
+        return $price;
     }
 
     private $_countries = array();
 
+    public function escapeHtml($data,$allowedTags = NULL) {
+        if(AW_All_Helper_Versions::convertVersion(Mage::getVersion())<1401) {
+            $data = htmlspecialchars($data);
+        } else {
+            $data = parent::escapeHtml($data);
+        }
+        return $data;
+    }
     private function _getItemOptions($item)
     {
         $result = array();
@@ -77,12 +85,16 @@ class AW_Onpulse_Helper_Data extends Mage_Core_Helper_Abstract
 
     private function _getCustomersRecentOrders($customer)
     {
+        if(AW_All_Helper_Versions::convertVersion(Mage::getVersion())<1401) {
+            $orderCollection=Mage::getModel('awonpulse/aggregator_components_order')->getCollectionForOldMegento();
+        } else {
         /** @var $orderCollection Mage_Sales_Model_Resource_Order_Collection */
         $orderCollection = Mage::getModel('sales/order')->getCollection();
         $orderCollection->addAddressFields()
-            ->addAttributeToFilter('customer_id', array('eq' => $customer->getId()))
             ->addAttributeToSelect('*')
-            ->addOrder('entity_id', 'DESC')
+            ->addOrder('entity_id', 'DESC');
+        }
+        $orderCollection->addAttributeToFilter('customer_id', array('eq' => $customer->getId()))
             ->setPageSize(self::RECENT_ORDERS_COUNT);
         return $orderCollection;
     }
