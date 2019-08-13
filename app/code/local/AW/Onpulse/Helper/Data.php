@@ -16,7 +16,7 @@ class AW_Onpulse_Helper_Data extends Mage_Core_Helper_Abstract
     private $_countries = array();
 
     public function escapeHtml($data,$allowedTags = NULL) {
-        if(AW_All_Helper_Versions::convertVersion(Mage::getVersion())<1401) {
+        if(version_compare(Mage::getVersion(),'1.4.1','<')) {
             $data = htmlspecialchars($data);
         } else {
             $data = parent::escapeHtml($data);
@@ -85,7 +85,7 @@ class AW_Onpulse_Helper_Data extends Mage_Core_Helper_Abstract
 
     private function _getCustomersRecentOrders($customer)
     {
-        if(AW_All_Helper_Versions::convertVersion(Mage::getVersion())<1401) {
+        if(version_compare(Mage::getVersion(),'1.4.1','<')) {
             $orderCollection=Mage::getModel('awonpulse/aggregator_components_order')->getCollectionForOldMegento();
         } else {
         /** @var $orderCollection Mage_Sales_Model_Resource_Order_Collection */

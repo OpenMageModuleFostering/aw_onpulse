@@ -24,7 +24,7 @@ class AW_Onpulse_Model_Aggregator_Components_Order extends AW_Onpulse_Model_Aggr
 
     public function pushData($event = null){
 
-        if(AW_All_Helper_Versions::convertVersion(Mage::getVersion())<1401) {
+        if(version_compare(Mage::getVersion(),'1.4.1','<')) {
             $orderCollection=$this->getCollectionForOldMegento();
         } else {
             $orderCollection = Mage::getModel('sales/order')->getCollection()
