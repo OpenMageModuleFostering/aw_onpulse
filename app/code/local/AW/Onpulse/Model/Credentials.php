@@ -14,11 +14,9 @@ class AW_Onpulse_Model_Credentials extends Mage_Core_Model_Abstract
                 $this->hash = Mage::getStoreConfig('awonpulse/general/credhash');
                 $this->key  = Mage::getStoreConfig('awonpulse/general/credurlkey');
                 $this->qrhash = md5($this->key.$this->hash);
-                return true;
             }
-        } else {
-            return true;
         }
+        return true;
     }
 
     public function checkAuthorization()
