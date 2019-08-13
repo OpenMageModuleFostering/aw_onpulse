@@ -8,7 +8,7 @@
     </tabs>
     <sections>
         <awonpulse translate="label" module="awonpulse">
-            <label>Onpulse</label>
+            <label>OnPulse</label>
             <tab>awall</tab>
             <frontend_type>text</frontend_type>
             <sort_order>99</sort_order>
@@ -18,9 +18,45 @@
             <groups>
                 <general translate="label">
                     <label>General</label>
+                    <sort_order>1</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <ordersstatus translate="label">
+                            <label>Show Statistic for Orders with Statuses</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <source_model>awonpulse/source_orderStatus</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <sort_order>10</sort_order>
+                        </ordersstatus>
+                        <ddl translate="label">
+                            <label>Disable Direct Login Link</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <sort_order>20</sort_order>
+                        </ddl>
+                        <show_sales_statistics_as translate="label">
+                            <label>Show Sales Statistics As</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>awonpulse/source_profitRevenue</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <sort_order>30</sort_order>
+                        </show_sales_statistics_as>
+                    </fields>
+                </general>
+                <access translate="label">
+                    <label>Access</label>
                     <frontend_type>text</frontend_type>
-                    <frontend_model>awonpulse/system_config_form_fieldset_onpulse_settings</frontend_model>
-                    <sort_order>2</sort_order>
+                    <frontend_model>awonpulse/system_config_form_fieldset_onpulse_access</frontend_model>
+                    <sort_order>10</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
@@ -37,21 +73,8 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                         </credhash>
-                        <ddl>
-                            <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </ddl>
-                        <ordersstatus>
-                            <frontend_type>multiselect</frontend_type>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </ordersstatus>
                     </fields>
-                </general>
+                </access>
             </groups>
         </awonpulse>
     </sections>

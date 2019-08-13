@@ -2,7 +2,7 @@
 <config>
     <modules>
         <AW_Onpulse>
-            <version>1.0.9</version>
+            <version>2.0.0</version>
         </AW_Onpulse>
     </modules>
     <global>
@@ -42,15 +42,15 @@
             </awonpulse>
         </helpers>
         <events>
-            <controller_action_predispatch_cms_index_noRoute>
+            <admin_system_config_changed_section_awonpulse>
                 <observers>
-                    <onpulse_authorization>
+                    <onpulse_settings>
                         <type>singleton</type>
                         <class>awonpulse/credentials</class>
-                        <method>checkAuthorization</method>
-                    </onpulse_authorization>
+                        <method>updateSettings</method>
+                    </onpulse_settings>
                 </observers>
-            </controller_action_predispatch_cms_index_noRoute>
+            </admin_system_config_changed_section_awonpulse>
             <onpulse_aggregate_data>
                 <observers>
                     <onpulse_aggregator_component_customer>
@@ -101,7 +101,7 @@
                                 <config>
                                     <children>
                                         <awonpulse>
-                                            <title>aheadWorks - Onpulse</title>
+                                            <title>aheadWorks - OnPulse</title>
                                         </awonpulse>
                                     </children>
                                 </config>
@@ -112,11 +112,34 @@
             </resources>
         </acl>
     </adminhtml>
+    <admin>
+        <routers>
+            <awonpulse_admin>
+                <use>admin</use>
+                <args>
+                    <module>AW_Onpulse</module>
+                    <frontName>awonpulse_admin</frontName>
+                </args>
+            </awonpulse_admin>
+        </routers>
+    </admin>
+    <frontend>
+        <routers>
+            <awonpulse>
+                <use>standard</use>
+                <args>
+                    <module>AW_Onpulse</module>
+                    <frontName>awonpulse</frontName>
+                </args>
+            </awonpulse>
+        </routers>
+    </frontend>
     <default>
         <awonpulse>
             <general>
                 <ddl>0</ddl>
                 <ordersstatus>complete</ordersstatus>
+                <show_sales_statistics_as>0</show_sales_statistics_as>
             </general>
         </awonpulse>
     </default>

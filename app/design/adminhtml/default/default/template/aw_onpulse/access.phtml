@@ -1,0 +1,118 @@
+<?php
+$directLoginLink = null;
+if ((Mage::getStoreConfig('awonpulse/access/credurlkey', Mage::app()->getDefaultStoreView()->getId())) && (Mage::getStoreConfig('awonpulse/access/credhash',Mage::app()->getDefaultStoreView()->getId()))) {
+    $credurlkey = Mage::getStoreConfig('awonpulse/access/credurlkey', Mage::app()->getDefaultStoreView()->getId());
+    $credhash = Mage::getStoreConfig('awonpulse/access/credhash', Mage::app()->getDefaultStoreView()->getId());
+    $qrsrc = 'http://chart.apis.google.com/chart?chs=250x250&cht=qr&chld=1/1&choe=utf-8&chl=';
+    $backUrl = Mage::app()->getDefaultStoreView()->getBaseUrl() . md5($credurlkey . $credhash);
+    $qrsrc .= 'http://m.onpulse.info/?qrhash=' . base64_encode($backUrl);
+    $directLoginLink = 'http://m.onpulse.info/?qrhash=' . base64_encode($backUrl);
+} else {
+    $credurlkey = '';
+    $credhash = '';
+    $qrsrc = null;
+}
+$isDirectLoginLinkDisabled = !!Mage::getStoreConfig('awonpulse/general/ddl', Mage::app()->getDefaultStoreView()->getId());
+?>
+
+<table class="form-list" id="access-fieldset">
+    <tbody>
+        <tr>
+            <td class="label">
+                <label><?php echo Mage::helper('awonpulse')->__('URL') ?></label>
+            </td>
+            <td class="value">
+                <input type="hidden" name="groups[access][fields][credurlkey][value]"
+                       id="urlkey" value="<?php echo $credurlkey;?>"/>
+                <input class="input-text" style="width: 100%;" onclick="this.setSelectionRange(0, 9999)" type="text"
+                       value="<?php echo Mage::app()->getDefaultStoreView()->getBaseUrl() . $credurlkey;?>"/>
+                <p class="note">
+                    <span><?php echo Mage::helper('awonpulse')->__('Your login name to access OnPulse service') ?></span>
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td class="label">
+                <label><?php echo Mage::helper('awonpulse')->__('Key') ?></label>
+            </td>
+            <td class="value">
+                <input type="hidden" name="groups[access][fields][credhash][value]"
+                       id="hash" value="<?php echo $credhash;?>"/>
+                <input class="input-text" style="width: 100%;" type="text" onclick="this.setSelectionRange(0, 9999)"
+                       value="<?php echo $credhash;?>"/>
+            </td>
+        </tr>
+        <?php if ($directLoginLink && !$isDirectLoginLinkDisabled) : ?>
+        <tr>
+            <td class="label">
+                <label><?php echo Mage::helper('awonpulse')->__('Direct Login URL') ?></label>
+            </td>
+            <td style="padding-left: 6px; ">
+                <a href="<?php echo $directLoginLink;?>" style="display: block; width: 400px; padding-top: 5px;"
+                   target="_blank"><?php echo substr($directLoginLink, 0, 60) . '...'; ?></a>
+            </td>
+        </tr>
+        <?php endif; ?>
+        <?php if ($qrsrc && !$isDirectLoginLinkDisabled) : ?>
+        <tr>
+            <td class="label">
+                <label><?php echo Mage::helper('awonpulse')->__('Direct Login QR') ?></label>
+            </td>
+            <td>
+                <img src="<?php echo $qrsrc; ?>" style="margin:-10px -30px;">
+            </td>
+        </tr>
+        <?php endif; ?>
+        <tr>
+            <td>
+            </td>
+            <td style="padding-left: 6px;">
+                <button><?php echo Mage::helper('awonpulse')->__('Generate new credentials') ?></button>
+                <p class="note">
+                    <span><?php echo Mage::helper('awonpulse')->__('Each time you reset credentials OnPulse generates new URL, key, direct login and QR code') ?></span>
+                </p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<script type="text/javascript">
+    $$('#access-fieldset button').first().observe('click', function(e){
+        key = mkPass(8);
+        hash = mkPass(8);
+        $('urlkey').setValue(key);
+        $('hash').setValue(hash);
+        var el = new Element('form');
+        el.setStyle({display: 'none'});
+        el.setAttribute('action', <?php echo Zend_Json::encode($this->getGenerateUrl());?>);
+        el.setAttribute('method', 'post');
+        el.innerHTML += $$('#config_edit_form input[name=form_key]').first().outerHTML;
+        el.innerHTML += ($('access-fieldset').innerHTML);
+        document.body.appendChild(el);
+        el.submit();
+        Event.stop(e);
+    });
+
+    function mtRand(min, max) {
+        var range = max - min + 1;
+        return Math.floor(Math.random() * range) + min;
+    }
+
+    function mkPass(len) {
+        len = 8;
+        var pass = '';
+        var rnd = 0;
+        var c = '';
+        for (i = 0; i < len; i++) {
+            rnd = mtRand(0, 1); // Латиница или цифры
+            if (rnd == 0) {
+                c = String.fromCharCode(mtRand(48, 57));
+            }
+            if (rnd == 1) {
+                c = String.fromCharCode(mtRand(97, 122));
+            }
+            pass += c;
+        }
+        return pass;
+    }
+</script>
