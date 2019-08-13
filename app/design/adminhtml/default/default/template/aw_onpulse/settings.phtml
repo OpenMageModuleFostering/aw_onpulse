@@ -1,5 +1,11 @@
 <?php
 $directLoginLink = null;
+$ddl = Mage::getStoreConfig('awonpulse/general/ddl');
+$ordersStatusCollection = Mage::getSingleton('sales/order_config')->getStatuses();
+$ordersstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus');
+$ordersstatus = explode(',', $ordersstatus);
+$size = count($ordersStatusCollection);
+
 if ((Mage::getStoreConfig('awonpulse/general/credurlkey')) && (Mage::getStoreConfig('awonpulse/general/credhash'))) {
     $credurlkey = Mage::getStoreConfig('awonpulse/general/credurlkey');
     $credhash = Mage::getStoreConfig('awonpulse/general/credhash');
@@ -40,6 +46,17 @@ if ((Mage::getStoreConfig('awonpulse/general/credurlkey')) && (Mage::getStoreCon
                        name="groups[general][fields][credhash][value]" id="hash" value="<?php echo $credhash;?>">
             </td>
         </tr>
+        <tr>
+            <td class="label">
+                <label><?php echo Mage::helper('awonpulse')->__('Disable direct login link') ?></label>
+            </td>
+            <td class="value">
+                <select name="groups[general][fields][ddl][value]" id="ddl" autofocus>
+                    <option <?php if($ddl=="1") echo "selected" ?> value="1"><?php echo Mage::helper('awonpulse')->__('Yes') ?></option>
+                    <option <?php if($ddl=="0") echo "selected" ?> value="0"><?php echo Mage::helper('awonpulse')->__('No') ?></option>
+                </select>
+            </td>
+        </tr>
         <?php if ($directLoginLink) : ?>
         <tr>
             <td class="label">
@@ -61,11 +78,31 @@ if ((Mage::getStoreConfig('awonpulse/general/credurlkey')) && (Mage::getStoreCon
             </td>
         </tr>
         <?php endif; ?>
+
+        <tr>
+            <td class="label">
+                <label><?php echo Mage::helper('awonpulse')->__('Show statistic for orders with statuses') ?></label>
+            </td>
+            <td class="value">
+                <select multiple name="groups[general][fields][ordersstatus][value][]" id="ordersstatus" size="<?php echo $size?>">
+                    <?php foreach ($ordersStatusCollection as $storeOrderStatus => $statusLabel): ?>
+                    <?php
+                       if (in_array($storeOrderStatus,$ordersstatus)){
+                           $selected = "selected";
+                       } else {
+                           $selected = "";
+                       }
+                    ?>
+                    <option <?php echo $selected; ?> value="<?php echo $storeOrderStatus; ?>"><?php echo $statusLabel; ?></option>
+                    <?php endforeach;?>
+                </select>
+            </td>
+        </tr>
         <tr>
             <td>
             </td>
             <td style="padding-left: 6px; padding-top: 10px;">
-                <button onclick="generate(this);"><?php echo Mage::helper('awonpulse')->__('Create new login credentials') ?></button>
+                <button onclick="generate(this);"><?php echo Mage::helper('awonpulse')->__('Save and generate new login credentials') ?></button>
                 <p class="note">
                     <span><?php echo Mage::helper('awonpulse')->__('Each time you reset credentials OnPulse generates new URL, key, direct login and QR code') ?></span>
                 </p>
@@ -74,7 +111,6 @@ if ((Mage::getStoreConfig('awonpulse/general/credurlkey')) && (Mage::getStoreCon
     </form>
     </tbody>
 </table>
-
 
 <script type="text/javascript">
     var flagSubmit = false;

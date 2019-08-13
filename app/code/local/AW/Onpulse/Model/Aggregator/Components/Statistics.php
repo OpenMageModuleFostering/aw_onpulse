@@ -98,7 +98,11 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
     {
 
         //collect yesterday orders count
-
+        $ordersstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus');
+        $ordersstatus = explode(',', $ordersstatus);
+        if (count($ordersstatus)==0){
+           $ordersstatus = array(Mage_Sales_Model_Order::STATE_COMPLETE);
+        }
         /** @var $yesterdayOrders Mage_Sales_Model_Resource_Order_Collection */
         $yesterdayOrders = Mage::getResourceModel('sales/order_collection');
 
@@ -106,7 +110,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
             'from' => $date->addDay(-1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),
             'to'=>$date->addDay(1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)
         ))->addAttributeToSelect('*')
-            ->addAttributeToFilter('state', array('eq' => Mage_Sales_Model_Order::STATE_COMPLETE));
+            ->addAttributeToFilter('status', array('in' => $ordersstatus));
 
 
         //collect today orders count
@@ -115,7 +119,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         $todayOrders = Mage::getResourceModel('sales/order_collection');
         $todayOrders->addAttributeToFilter('created_at', array('from' => $date->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)))
             ->addAttributeToSelect('*')
-            ->addAttributeToFilter('state', array('eq' => Mage_Sales_Model_Order::STATE_COMPLETE));
+            ->addAttributeToFilter('status', array('in' => $ordersstatus));
 
         //collect max, min, average orders
         $order = array();
@@ -150,6 +154,11 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
 
     private function _getSales($date)
     {
+        $ordersstatus = Mage::getStoreConfig('awonpulse/general/ordersstatus');
+        $ordersstatus = explode(',', $ordersstatus);
+        if (count($ordersstatus)==0){
+            $ordersstatus = array(Mage_Sales_Model_Order::STATE_COMPLETE);
+        }
         $shiftedDate = $this->_getShiftedDate();
         $shiftedDate->addDay(1);
         $date->addDay(1);
@@ -159,7 +168,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
             $orders = Mage::getModel('sales/order')->getCollection();
             $orders->addAttributeToFilter('created_at', array('from' => $date->addDay(-1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT),'to'=>$date->addDay(1)->toString(Varien_Date::DATETIME_INTERNAL_FORMAT)))
                 ->addAttributeToSelect('*')
-                ->addAttributeToFilter('state', array('eq' => Mage_Sales_Model_Order::STATE_COMPLETE));
+                ->addAttributeToFilter('status', array('in' => $ordersstatus));
             $date->addDay(-1);
             $shiftedDate->addDay(-1);
             $revenue[$i]['revenue']=0;
