@@ -3,7 +3,7 @@
 class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model_Aggregator_Component
 {
     const COUNT_CUSTOMERS = 5;
-    const MYSQL_DATE_FORMAT = 'Y-m-d';
+    const MYSQL_DATE_FORMAT = 'Y-d-m';
 
     private function _getShiftedDate()
     {
@@ -40,6 +40,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
         $aggregator = $event->getEvent()->getAggregator();
         $dashboard = array();
         $today = $this->_getCurrentDate();
+
         $dashboard['sales']     = $this->_getSales($today);
         $today = $this->_getCurrentDate();
         $dashboard['orders']    = $this->_getOrders($today);
@@ -169,6 +170,7 @@ class AW_Onpulse_Model_Aggregator_Components_Statistics extends AW_Onpulse_Model
 
             }
         }
+
         return array('revenue'=>$revenue);
     }
 }
